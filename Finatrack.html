@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finatrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+[data-theme="light"] {
+  --bg: #F4F1ED;
+  --sidebar-bg: #FFFFFF;
+  --card-bg: #FFFFFF;
+  --card-inner: #F8F6F3;
+  --border: #E8E3DC;
+  --text: #1C1917;
+  --text-secondary: #78716C;
+  --text-muted: #A8A29E;
+  --orange: #E07B39;
+  --orange-bg: #FEF3EB;
+  --orange-border: #F5C9A7;
+  --input-bg: #F8F6F3;
+  --input-border: #DDD8D1;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.10), 0 8px 24px rgba(0,0,0,0.06);
+  --nav-active-bg: #FEF3EB;
+  --nav-active-text: #E07B39;
+  --nav-text: #78716C;
+}
+[data-theme="dark"] {
+  --bg: #141210;
+  --sidebar-bg: #1C1917;
+  --card-bg: #1C1917;
+  --card-inner: #242220;
+  --border: #2C2825;
+  --text: #F5F0EB;
+  --text-secondary: #A8A29E;
+  --text-muted: #57534E;
+  --orange: #F59040;
+  --orange-bg: #2A1F14;
+  --orange-border: #5C3A1E;
+  --input-bg: #242220;
+  --input-border: #2C2825;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+  --nav-active-bg: #2A1F14;
+  --nav-active-text: #F59040;
+  --nav-text: #78716C;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; transition: background 0.3s, color 0.3s; }
+
+/* Sidebar */
+.sidebar { width: 240px; min-height: 100vh; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; transition: background 0.3s, border-color 0.3s; }
+.sidebar-logo { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 36px; height: 36px; background: var(--orange); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.logo-text { font-size: 20px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+.logo-text span { color: var(--orange); }
+nav { padding: 16px 12px; flex: 1; }
+.nav-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); padding: 0 12px; margin-bottom: 6px; margin-top: 16px; }
+.nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 10px; border: none; background: none; color: var(--nav-text); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; text-align: left; transition: all 0.2s; margin-bottom: 2px; }
+.nav-btn:hover { background: var(--card-inner); color: var(--text); }
+.nav-btn.active { background: var(--nav-active-bg); color: var(--nav-active-text); font-weight: 600; }
+.nav-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; background: var(--card-inner); flex-shrink: 0; transition: background 0.2s; }
+.nav-btn.active .nav-icon { background: var(--orange-bg); }
+.sidebar-bottom { padding: 16px 12px; border-top: 1px solid var(--border); }
+.theme-toggle { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 10px; border: none; background: none; color: var(--text-secondary); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.theme-toggle:hover { background: var(--card-inner); color: var(--text); }
+
+/* Main */
+.main { margin-left: 240px; flex: 1; padding: 36px 44px; max-width: calc(100% - 240px); }
+section { display: none; }
+section.active { display: block; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Section header */
+.section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+.section-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--orange-bg); border: 1px solid var(--orange-border); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.section-title { font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+.section-desc { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; padding-left: 58px; }
+
+/* Cards */
+.card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px 24px; margin-bottom: 12px; box-shadow: var(--shadow); transition: box-shadow 0.2s; }
+.card:hover { box-shadow: var(--shadow-hover); }
+.card-row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.field { display: flex; flex-direction: column; gap: 7px; flex: 1; min-width: 140px; }
+.field label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); }
+.field input { background: var(--input-bg); border: 1.5px solid var(--input-border); border-radius: 10px; color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 500; padding: 11px 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; width: 100%; }
+.field input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-bg); }
+.field input::placeholder { color: var(--text-muted); font-weight: 400; }
+.remove-btn { background: none; border: 1.5px solid var(--border); color: var(--text-muted); font-size: 15px; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; align-self: flex-end; }
+.remove-btn:hover { border-color: #EF4444; color: #EF4444; background: #FEF2F2; }
+
+/* Add button */
+.add-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--orange-bg); border: 1.5px dashed var(--orange-border); color: var(--orange); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 600; padding: 10px 18px; border-radius: 10px; cursor: pointer; transition: all 0.2s; margin-bottom: 28px; }
+.add-btn:hover { background: var(--orange); color: #fff; border-color: var(--orange); }
+
+/* Chart */
+.chart-wrapper { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
+.chart-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.chart-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+.interval-group { display: flex; background: var(--card-inner); border-radius: 10px; padding: 3px; gap: 2px; }
+.int-btn { background: none; border: none; color: var(--text-muted); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+.int-btn:hover { color: var(--text); }
+.int-btn.active { background: var(--card-bg); color: var(--orange); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+canvas { max-height: 240px; }
+
+/* Zeitraum pills */
+.zeitraum-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.zeitraum-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-right: 4px; }
+.zt-btn { background: var(--card-bg); border: 1.5px solid var(--border); color: var(--text-secondary); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 600; padding: 7px 18px; border-radius: 999px; cursor: pointer; transition: all 0.2s; }
+.zt-btn:hover { border-color: var(--orange); color: var(--orange); }
+.zt-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+
+/* Total */
+.total-hero { background: var(--card-bg); border: 2px solid var(--orange-border); border-radius: 16px; padding: 28px 32px; margin-bottom: 20px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 20px; }
+.total-icon { width: 52px; height: 52px; background: var(--orange); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+.total-label { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.total-amount { font-size: 38px; font-weight: 800; color: var(--orange); letter-spacing: -1.5px; line-height: 1; }
+.total-sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.breakdown-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.breakdown-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); }
+.bc-label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.bc-value { font-size: 18px; font-weight: 700; color: var(--text); }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+@media (max-width: 768px) {
+  .sidebar { width: 64px; }
+  .logo-text, .nav-btn span, .nav-label, .theme-label { display: none; }
+  .main { margin-left: 64px; max-width: calc(100% - 64px); padding: 20px; }
+  .nav-btn { justify-content: center; padding: 10px; }
+  .section-desc { padding-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">📈</div>
+    <div class="logo-text">Fina<span>track</span></div>
+  </div>
+  <nav>
+    <div class="nav-label">Anlagen</div>
+    <button class="nav-btn active" onclick="showSection('tagesgeld',this)"><div class="nav-icon">🏦</div><span>Tagesgeld</span></button>
+    <button class="nav-btn" onclick="showSection('etf',this)"><div class="nav-icon">📊</div><span>ETFs</span></button>
+    <button class="nav-btn" onclick="showSection('aktien',this)"><div class="nav-icon">📉</div><span>Aktien</span></button>
+    <button class="nav-btn" onclick="showSection('materiell',this)"><div class="nav-icon">🏠</div><span>Sachwerte</span></button>
+    <div class="nav-label">Übersicht</div>
+    <button class="nav-btn" onclick="showSection('gesamt',this)"><div class="nav-icon">💰</div><span>Gesamtvermögen</span></button>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span id="theme-icon">🌙</span>
+      <span class="theme-label" id="theme-label">Dark Mode</span>
+    </button>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- TAGESGELD -->
+  <section id="tagesgeld" class="active">
+    <div class="section-header"><div class="section-icon">🏦</div><div class="section-title">Tagesgeldkonten</div></div>
+    <div class="section-desc">Aktuelles Kapital, monatliche Einzahlung und Zinssatz pro Konto.</div>
+    <div id="tagesgeld-list"></div>
+    <button class="add-btn" onclick="addRow('tagesgeld')"><span>+</span> Konto hinzufügen</button>
+    <div class="zeitraum-row">
+      <span class="zeitraum-label">Zeitraum</span>
+      <button class="zt-btn active" onclick="setYears('tg',1,this)">1 Jahr</button>
+      <button class="zt-btn" onclick="setYears('tg',2,this)">2 Jahre</button>
+      <button class="zt-btn" onclick="setYears('tg',4,this)">4 Jahre</button>
+      <button class="zt-btn" onclick="setYears('tg',6,this)">6 Jahre</button>
+    </div>
+    <div class="chart-wrapper">
+      <div class="chart-top">
+        <span class="chart-label">Kapitalentwicklung mit Zinsen</span>
+        <div class="interval-group">
+          <button class="int-btn active" onclick="setYears('tg',1,this,true)">1J</button>
+          <button class="int-btn" onclick="setYears('tg',2,this,true)">2J</button>
+          <button class="int-btn" onclick="setYears('tg',4,this,true)">4J</button>
+          <button class="int-btn" onclick="setYears('tg',6,this,true)">6J</button>
+        </div>
+      </div>
+      <canvas id="tg-chart"></canvas>
+    </div>
+  </section>
+
+  <!-- ETF -->
+  <section id="etf">
+    <div class="section-header"><div class="section-icon">📊</div><div class="section-title">ETF-Anlagen</div></div>
+    <div class="section-desc">Angelegtes Kapital, monatliche Sparrate und erwartete Jahresrendite.</div>
+    <div id="etf-list"></div>
+    <button class="add-btn" onclick="addRow('etf')"><span>+</span> ETF hinzufügen</button>
+    <div class="zeitraum-row">
+      <span class="zeitraum-label">Zeitraum</span>
+      <button class="zt-btn active" onclick="setYears('etf',1,this)">1 Jahr</button>
+      <button class="zt-btn" onclick="setYears('etf',2,this)">2 Jahre</button>
+      <button class="zt-btn" onclick="setYears('etf',4,this)">4 Jahre</button>
+      <button class="zt-btn" onclick="setYears('etf',6,this)">6 Jahre</button>
+    </div>
+    <div class="chart-wrapper">
+      <div class="chart-top">
+        <span class="chart-label">Wertentwicklung deiner ETFs</span>
+        <div class="interval-group">
+          <button class="int-btn active" onclick="setYears('etf',1,this,true)">1J</button>
+          <button class="int-btn" onclick="setYears('etf',2,this,true)">2J</button>
+          <button class="int-btn" onclick="setYears('etf',4,this,true)">4J</button>
+          <button class="int-btn" onclick="setYears('etf',6,this,true)">6J</button>
+        </div>
+      </div>
+      <canvas id="etf-chart"></canvas>
+    </div>
+  </section>
+
+  <!-- AKTIEN -->
+  <section id="aktien">
+    <div class="section-header"><div class="section-icon">📉</div><div class="section-title">Aktien</div></div>
+    <div class="section-desc">Wertentwicklung deines Aktienportfolios.</div>
+    <div id="aktien-list"></div>
+    <button class="add-btn" onclick="addRow('aktien')"><span>+</span> Aktie hinzufügen</button>
+    <div class="zeitraum-row">
+      <span class="zeitraum-label">Zeitraum</span>
+      <button class="zt-btn active" onclick="setYears('aktien',1,this)">1 Jahr</button>
+      <button class="zt-btn" onclick="setYears('aktien',2,this)">2 Jahre</button>
+      <button class="zt-btn" onclick="setYears('aktien',4,this)">4 Jahre</button>
+      <button class="zt-btn" onclick="setYears('aktien',6,this)">6 Jahre</button>
+    </div>
+    <div class="chart-wrapper">
+      <div class="chart-top">
+        <span class="chart-label">Wertentwicklung deines Aktienportfolios</span>
+        <div class="interval-group">
+          <button class="int-btn active" onclick="setYears('aktien',1,this,true)">1J</button>
+          <button class="int-btn" onclick="setYears('aktien',2,this,true)">2J</button>
+          <button class="int-btn" onclick="setYears('aktien',4,this,true)">4J</button>
+          <button class="int-btn" onclick="setYears('aktien',6,this,true)">6J</button>
+        </div>
+      </div>
+      <canvas id="aktien-chart"></canvas>
+    </div>
+  </section>
+
+  <!-- MATERIELL -->
+  <section id="materiell">
+    <div class="section-header"><div class="section-icon">🏠</div><div class="section-title">Materielle Sachwerte</div></div>
+    <div class="section-desc">Gegenstände und ihr geschätzter aktueller Wert.</div>
+    <div id="materiell-list"></div>
+    <button class="add-btn" onclick="addRow('materiell')"><span>+</span> Sachwert hinzufügen</button>
+  </section>
+
+  <!-- GESAMT -->
+  <section id="gesamt">
+    <div class="section-header"><div class="section-icon">💰</div><div class="section-title">Gesamtvermögen</div></div>
+    <div class="section-desc">Alle Anlagen zusammengefasst.</div>
+    <div class="total-hero">
+      <div class="total-icon">💵</div>
+      <div>
+        <div class="total-label">Aktuelles Gesamtvermögen</div>
+        <div class="total-amount" id="total-amount">0,00 €</div>
+        <div class="total-sub">ohne zukünftige Entwicklung</div>
+      </div>
+    </div>
+    <div class="breakdown-grid">
+      <div class="breakdown-card"><div class="bc-label">🏦 Tagesgeld</div><div class="bc-value" id="total-tg">0,00 €</div></div>
+      <div class="breakdown-card"><div class="bc-label">📊 ETFs</div><div class="bc-value" id="total-etf">0,00 €</div></div>
+      <div class="breakdown-card"><div class="bc-label">📉 Aktien</div><div class="bc-value" id="total-ak">0,00 €</div></div>
+      <div class="breakdown-card"><div class="bc-label">🏠 Sachwerte</div><div class="bc-value" id="total-mat">0,00 €</div></div>
+    </div>
+    <div class="zeitraum-row">
+      <span class="zeitraum-label">Zeitraum</span>
+      <button class="zt-btn active" onclick="setYears('gesamt',1,this)">1 Jahr</button>
+      <button class="zt-btn" onclick="setYears('gesamt',2,this)">2 Jahre</button>
+      <button class="zt-btn" onclick="setYears('gesamt',4,this)">4 Jahre</button>
+      <button class="zt-btn" onclick="setYears('gesamt',6,this)">6 Jahre</button>
+    </div>
+    <div class="chart-wrapper">
+      <div class="chart-top">
+        <span class="chart-label">Gesamtentwicklung aller Anlagen</span>
+        <div class="interval-group">
+          <button class="int-btn active" onclick="setYears('gesamt',1,this,true)">1J</button>
+          <button class="int-btn" onclick="setYears('gesamt',2,this,true)">2J</button>
+          <button class="int-btn" onclick="setYears('gesamt',4,this,true)">4J</button>
+          <button class="int-btn" onclick="setYears('gesamt',6,this,true)">6J</button>
+        </div>
+      </div>
+      <canvas id="gesamt-chart"></canvas>
+    </div>
+  </section>
+
+</main>
+
+<script>
+const state = {
+  tg:     { years: 1, chart: null },
+  etf:    { years: 1, chart: null },
+  aktien: { years: 1, chart: null },
+  gesamt: { years: 1, chart: null },
+};
+let rowId = 0;
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent = isDark ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = isDark ? 'Dark Mode' : 'Light Mode';
+  ['tg','etf','aktien','gesamt'].forEach(k => { if (state[k].chart) rebuildChart(k); });
+}
+
+function showSection(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'gesamt') updateGesamt();
+}
+
+function addRow(type) {
+  const id = rowId++;
+  const list = document.getElementById(type + '-list');
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.id = 'row-' + id;
+
+  if (type === 'tagesgeld') {
+    div.innerHTML = `<div class="card-row">
+      <div class="field"><label>Aktuelles Kapital (€)</label><input type="number" placeholder="5.000" min="0" step="0.01" oninput="rebuildChart('tg')" /></div>
+      <div class="field"><label>Monatliche Einzahlung (€)</label><input type="number" placeholder="200" min="0" step="0.01" oninput="rebuildChart('tg')" /></div>
+      <div class="field"><label>Zinssatz (% p.a.)</label><input type="number" placeholder="3,5" min="0" max="100" step="0.01" oninput="rebuildChart('tg')" /></div>
+      <button class="remove-btn" onclick="removeRow(${id},'tg')" title="Entfernen">✕</button>
+    </div>`;
+  } else if (type === 'etf') {
+    div.innerHTML = `<div class="card-row">
+      <div class="field"><label>Aktuell angelegt (€)</label><input type="number" placeholder="10.000" min="0" step="0.01" oninput="rebuildChart('etf')" /></div>
+      <div class="field"><label>Monatliche Einzahlung (€)</label><input type="number" placeholder="150" min="0" step="0.01" oninput="rebuildChart('etf')" /></div>
+      <div class="field"><label>Voraussichtliche Rendite (% p.a.)</label><input type="number" placeholder="7" min="0" max="100" step="0.01" oninput="rebuildChart('etf')" /></div>
+      <button class="remove-btn" onclick="removeRow(${id},'etf')" title="Entfernen">✕</button>
+    </div>`;
+  } else if (type === 'aktien') {
+    div.innerHTML = `<div class="card-row">
+      <div class="field"><label>Aktuell angelegt (€)</label><input type="number" placeholder="5.000" min="0" step="0.01" oninput="rebuildChart('aktien')" /></div>
+      <div class="field"><label>Monatliche Einzahlung (€)</label><input type="number" placeholder="100" min="0" step="0.01" oninput="rebuildChart('aktien')" /></div>
+      <div class="field"><label>Voraussichtliche Rendite (% p.a.)</label><input type="number" placeholder="8" min="0" max="100" step="0.01" oninput="rebuildChart('aktien')" /></div>
+      <button class="remove-btn" onclick="removeRow(${id},'aktien')" title="Entfernen">✕</button>
+    </div>`;
+  } else if (type === 'materiell') {
+    div.innerHTML = `<div class="card-row">
+      <div class="field" style="flex:2"><label>Gegenstand</label><input type="text" placeholder="z.B. Fahrrad, Laptop, Kamera ..." oninput="updateGesamt()" /></div>
+      <div class="field"><label>Geschätzter Wert (€)</label><input type="number" placeholder="500" min="0" step="0.01" oninput="updateGesamt()" /></div>
+      <button class="remove-btn" onclick="removeRow(${id},'mat')" title="Entfernen">✕</button>
+    </div>`;
+  }
+  list.appendChild(div);
+}
+
+function removeRow(id, key) {
+  const el = document.getElementById('row-' + id);
+  if (el) el.remove();
+  if (key !== 'mat') rebuildChart(key);
+  else updateGesamt();
+}
+
+function getRows(listId) {
+  const el = document.getElementById(listId);
+  if (!el) return [];
+  return Array.from(el.querySelectorAll('.card')).map(card =>
+    Array.from(card.querySelectorAll('input[type=number]')).map(i => parseFloat(i.value) || 0)
+  );
+}
+
+function calcProjection(rows, years) {
+  const months = years * 12;
+  const result = new Array(months + 1).fill(0);
+  rows.forEach(([capital, monthly, rate]) => {
+    const mr = (rate || 0) / 100 / 12;
+    let v = capital;
+    result[0] += v;
+    for (let m = 1; m <= months; m++) { v = v * (1 + mr) + monthly; result[m] += v; }
+  });
+  return result;
+}
+
+function makeLabels(years) {
+  const months = years * 12;
+  return Array.from({ length: months + 1 }, (_, m) => {
+    if (m === 0) return 'Jahr 0';
+    if (m % 12 === 0) return 'Jahr ' + (m / 12);
+    if (months <= 12) return m + ' Mo.';
+    if (m % 3 === 0) return m + ' Mo.';
+    return '';
+  });
+}
+
+function getOrange() { return document.documentElement.getAttribute('data-theme') === 'dark' ? '#F59040' : '#E07B39'; }
+function getChartColors() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return { grid: dark ? '#2C2825' : '#EDE8E0', tick: dark ? '#57534E' : '#A8A29E', tooltipBg: dark ? '#1C1917' : '#FFFFFF' };
+}
+
+function rebuildChart(key) {
+  if (key === 'gesamt') { updateGesamt(); return; }
+  const listMap = { tg: 'tagesgeld-list', etf: 'etf-list', aktien: 'aktien-list' };
+  const rows = getRows(listMap[key]);
+  drawChart(key + (key === 'tg' ? '' : '') + '-chart', key, makeLabels(state[key].years), calcProjection(rows, state[key].years));
+  updateGesamt();
+}
+
+function drawChart(canvasId, stateKey, labels, data) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (state[stateKey].chart) { state[stateKey].chart.destroy(); state[stateKey].chart = null; }
+  const orange = getOrange();
+  const colors = getChartColors();
+  const grad = ctx.createLinearGradient(0, 0, 0, 240);
+  grad.addColorStop(0, orange + '28'); grad.addColorStop(1, orange + '04');
+  state[stateKey].chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{ data, borderColor: orange, borderWidth: 2.5, pointRadius: data.length <= 13 ? 4 : 0, pointBackgroundColor: orange, pointBorderColor: '#fff', pointBorderWidth: 2, fill: true, backgroundColor: grad, tension: 0.4 }] },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: c => c.raw.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €' },
+          backgroundColor: colors.tooltipBg, borderColor: orange, borderWidth: 1.5,
+          titleColor: colors.tick, bodyColor: orange,
+          bodyFont: { family: 'Plus Jakarta Sans', weight: '700', size: 13 },
+          titleFont: { family: 'Plus Jakarta Sans', size: 11 }, padding: 10, cornerRadius: 8,
+        }
+      },
+      scales: {
+        x: { grid: { color: colors.grid, drawTicks: false }, ticks: { color: colors.tick, font: { family: 'Plus Jakarta Sans', size: 11 }, maxRotation: 0, padding: 8 }, border: { display: false } },
+        y: { grid: { color: colors.grid, drawTicks: false }, ticks: { color: colors.tick, font: { family: 'Plus Jakarta Sans', size: 11 }, padding: 8, callback: v => v >= 1000000 ? (v/1000000).toFixed(1)+'M €' : v >= 1000 ? (v/1000).toFixed(0)+'k €' : v + ' €' }, border: { display: false } }
+      }
+    }
+  });
+}
+
+function setYears(key, years, btn, isInner) {
+  state[key].years = years;
+  const sectionId = key === 'tg' ? 'tagesgeld' : key;
+  const section = document.getElementById(sectionId);
+  if (section) {
+    section.querySelectorAll('.zt-btn').forEach(b => b.classList.remove('active'));
+    section.querySelectorAll('.int-btn').forEach(b => b.classList.remove('active'));
+    const ytxt = String(years);
+    section.querySelectorAll('.zt-btn').forEach(b => { if (b.textContent.trim().startsWith(ytxt)) b.classList.add('active'); });
+    section.querySelectorAll('.int-btn').forEach(b => { if (b.textContent.trim() === ytxt + 'J') b.classList.add('active'); });
+  }
+  rebuildChart(key);
+}
+
+function fmt(v) { return v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; }
+
+function updateGesamt() {
+  const sum = rows => rows.reduce((s, r) => s + (r[0] || 0), 0);
+  const tgVal = sum(getRows('tagesgeld-list'));
+  const etfVal = sum(getRows('etf-list'));
+  const akVal = sum(getRows('aktien-list'));
+  let matVal = 0;
+  document.querySelectorAll('#materiell-list .card').forEach(card => {
+    const inp = card.querySelectorAll('input[type=number]');
+    if (inp.length) matVal += parseFloat(inp[0].value) || 0;
+  });
+  const total = tgVal + etfVal + akVal + matVal;
+  document.getElementById('total-amount').textContent = fmt(total);
+  document.getElementById('total-tg').textContent = fmt(tgVal);
+  document.getElementById('total-etf').textContent = fmt(etfVal);
+  document.getElementById('total-ak').textContent = fmt(akVal);
+  document.getElementById('total-mat').textContent = fmt(matVal);
+  const years = state.gesamt.years;
+  const allRows = [...getRows('tagesgeld-list'), ...getRows('etf-list'), ...getRows('aktien-list')];
+  const gesamtData = calcProjection(allRows, years).map(v => v + matVal);
+  drawChart('gesamt-chart', 'gesamt', makeLabels(years), gesamtData);
+}
+
+// Init
+addRow('tagesgeld'); addRow('etf'); addRow('aktien'); addRow('materiell');
+rebuildChart('tg'); rebuildChart('etf'); rebuildChart('aktien');
+</script>
+</body>
+</html>
